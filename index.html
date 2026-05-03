@@ -1,0 +1,343 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>РМФЦ — Портал обращений</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+
+:root{
+--blue:#2563eb;
+--green:#16a34a;
+--bg:#f5f7fb;
+--card:#ffffff;
+--text:#111827;
+}
+
+.dark{
+--bg:#0f172a;
+--card:#1e293b;
+--text:#e5e7eb;
+}
+
+body{
+margin:0;
+font-family:Inter;
+background:var(--bg);
+color:var(--text);
+transition:0.3s;
+}
+
+header{
+background:linear-gradient(90deg,#1e3a8a,#2563eb,#16a34a);
+color:white;
+padding:18px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+/* ЛОГО */
+.logo{
+display:flex;
+align-items:center;
+gap:12px;
+}
+
+/* КОНТЕЙНЕР */
+.container{
+width:1200px;
+max-width:95%;
+margin:20px auto;
+display:grid;
+grid-template-columns:1fr 1.2fr;
+gap:20px;
+}
+
+.card{
+background:var(--card);
+border-radius:14px;
+padding:18px;
+border-left:4px solid var(--green);
+box-shadow:0 8px 20px rgba(0,0,0,0.05);
+}
+
+input,textarea,select{
+width:100%;
+padding:10px;
+margin:6px 0 12px;
+border-radius:10px;
+border:1px solid #d1d5db;
+}
+
+button{
+padding:10px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+font-weight:600;
+}
+
+.primary{background:var(--blue);color:white;}
+.gray{background:#e5e7eb;}
+.danger{background:#ef4444;color:white;}
+.success{background:var(--green);color:white;}
+
+.entry{
+border-left:4px solid var(--blue);
+padding:10px;
+margin-bottom:10px;
+background:rgba(0,0,0,0.03);
+border-radius:10px;
+}
+
+.badge{
+font-size:11px;
+padding:3px 6px;
+border-radius:6px;
+color:white;
+}
+
+.j{background:#ef4444;}
+.p{background:#f59e0b;}
+.b{background:#10b981;}
+
+.small{font-size:12px;color:gray;}
+
+@media(max-width:900px){
+.container{grid-template-columns:1fr;}
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+
+<div class="logo">
+
+<svg width="42" height="42" viewBox="0 0 100 100">
+<polygon points="50,10 60,90 40,90" fill="white"/>
+<polygon points="20,25 28,90 12,90" fill="white" opacity="0.9"/>
+<polygon points="80,25 88,90 72,90" fill="white" opacity="0.9"/>
+<rect x="48" y="40" width="4" height="6" fill="#16a34a"/>
+<rect x="48" y="55" width="4" height="6" fill="#16a34a"/>
+</svg>
+
+<div>
+<b>РМФЦ</b><br>
+<span style="font-size:12px;">Портал обращений</span>
+</div>
+
+</div>
+
+<div>
+<button class="gray" onclick="login()">Вход</button>
+<button class="gray" onclick="toggleTheme()">🌙</button>
+</div>
+
+</header>
+
+<div class="container">
+
+<div class="card">
+
+<h3>Новое обращение</h3>
+
+<form id="form">
+
+<input id="name" placeholder="ФИО" required>
+<input id="email" placeholder="Email" required>
+
+<select id="type">
+<option>Жалоба</option>
+<option>Предложение</option>
+<option>Благодарность</option>
+</select>
+
+<textarea id="msg" rows="5" placeholder="Текст..." required></textarea>
+
+<button class="primary" type="submit">Отправить</button>
+
+</form>
+
+<p id="status"></p>
+
+<hr>
+
+<button class="gray" onclick="exportJSON()">📥 JSON</button>
+<button class="gray" onclick="exportPDF()">📄 PDF</button>
+
+</div>
+
+<div class="card">
+
+<h3>Поиск</h3>
+<input id="search" oninput="render()" placeholder="Поиск...">
+
+<h3>Статистика</h3>
+<canvas id="chart"></canvas>
+
+<hr>
+
+<div id="list"></div>
+
+</div>
+
+</div>
+
+<script>
+
+let logged=false;
+let chart;
+
+function id(){
+return "RMFC-"+Math.floor(Math.random()*90000+10000);
+}
+
+function getData(){
+return JSON.parse(localStorage.getItem("db"))||[];
+}
+
+function saveData(d){
+localStorage.setItem("db",JSON.stringify(d));
+}
+
+form.onsubmit=e=>{
+e.preventDefault();
+
+let data=getData();
+
+data.push({
+id:id(),
+name:name.value,
+email:email.value,
+type:type.value,
+msg:msg.value,
+status:"Новое",
+date:new Date().toLocaleString()
+});
+
+saveData(data);
+
+status.innerHTML="<span style='color:var(--green)'>✔ Отправлено</span>";
+form.reset();
+
+render();
+};
+
+function login(){
+let p=prompt("Пароль:");
+if(p==="admin"){logged=true;alert("Админ");}
+else alert("Ошибка");
+}
+
+function setStatus(id,s){
+let d=getData();
+d.forEach(x=>{if(x.id===id)x.status=s});
+saveData(d);
+render();
+}
+
+function del(id){
+let d=getData().filter(x=>x.id!==id);
+saveData(d);
+render();
+}
+
+function toggleTheme(){
+document.body.classList.toggle("dark");
+}
+
+function render(){
+
+let data=getData();
+let q=document.getElementById("search").value.toLowerCase();
+
+let list=document.getElementById("list");
+list.innerHTML="";
+
+let j=0,p=0,b=0;
+
+data
+.filter(x=>x.msg.toLowerCase().includes(q)||x.name.toLowerCase().includes(q))
+.forEach(x=>{
+
+if(x.type==="Жалоба")j++;
+if(x.type==="Предложение")p++;
+if(x.type==="Благодарность")b++;
+
+let cls=x.type==="Жалоба"?"j":x.type==="Предложение"?"p":"b";
+
+list.innerHTML+=`
+<div class="entry">
+<span class="badge ${cls}">${x.type}</span>
+<b>${x.id}</b><br>
+${x.msg}
+<div class="small">${x.name} | ${x.date}</div>
+<div class="small">Статус: ${x.status}</div>
+
+${logged?`
+<button onclick="setStatus('${x.id}','В работе')">В работу</button>
+<button onclick="setStatus('${x.id}','Закрыто')">Закрыть</button>
+<button class="danger" onclick="del('${x.id}')">Удалить</button>
+`:``}
+
+</div>`;
+});
+
+draw(j,p,b);
+}
+
+function draw(j,p,b){
+
+if(chart)chart.destroy();
+
+chart=new Chart(document.getElementById("chart"),{
+type:"doughnut",
+data:{
+labels:["Жалобы","Предложения","Благодарности"],
+datasets:[{
+data:[j,p,b],
+backgroundColor:["#ef4444","#f59e0b","#10b981"]
+}]
+}
+});
+}
+
+function exportJSON(){
+let b=new Blob([localStorage.getItem("db")],{type:"application/json"});
+let a=document.createElement("a");
+a.href=URL.createObjectURL(b);
+a.download="rmfc.json";
+a.click();
+}
+
+async function exportPDF(){
+const {jsPDF}=window.jspdf;
+let doc=new jsPDF();
+let d=getData();
+let y=10;
+
+doc.text("RMFC REPORT",10,y);y+=10;
+
+d.forEach(x=>{
+doc.text(`${x.id} | ${x.type} | ${x.status}`,10,y);
+y+=7;
+});
+
+doc.save("report.pdf");
+}
+
+render();
+
+</script>
+
+</body>
+</html>
