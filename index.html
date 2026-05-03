@@ -1,8 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+
+<!-- 📱 ВАЖНО: фикс мобильного отображения -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>РМФЦ — Портал обращений</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -42,14 +45,12 @@ justify-content:space-between;
 align-items:center;
 }
 
-/* ЛОГО */
 .logo{
 display:flex;
 align-items:center;
 gap:12px;
 }
 
-/* КОНТЕЙНЕР */
 .container{
 width:1200px;
 max-width:95%;
@@ -73,6 +74,7 @@ padding:10px;
 margin:6px 0 12px;
 border-radius:10px;
 border:1px solid #d1d5db;
+font-size:16px;
 }
 
 button{
@@ -86,7 +88,6 @@ font-weight:600;
 .primary{background:var(--blue);color:white;}
 .gray{background:#e5e7eb;}
 .danger{background:#ef4444;color:white;}
-.success{background:var(--green);color:white;}
 
 .entry{
 border-left:4px solid var(--blue);
@@ -109,8 +110,33 @@ color:white;
 
 .small{font-size:12px;color:gray;}
 
-@media(max-width:900px){
-.container{grid-template-columns:1fr;}
+/* 📱 МОБИЛЬНАЯ ВЕРСИЯ */
+@media (max-width: 900px){
+
+.container{
+grid-template-columns:1fr;
+}
+
+header{
+flex-direction:column;
+gap:10px;
+text-align:center;
+}
+
+button{
+width:100%;
+margin-top:5px;
+}
+
+.logo{
+justify-content:center;
+}
+
+}
+
+html,body{
+width:100%;
+overflow-x:hidden;
 }
 
 </style>
@@ -234,7 +260,7 @@ render();
 
 function login(){
 let p=prompt("Пароль:");
-if(p==="admin"){logged=true;alert("Админ");}
+if(p==="admin"){logged=true;alert("Админ доступ");}
 else alert("Ошибка");
 }
 
